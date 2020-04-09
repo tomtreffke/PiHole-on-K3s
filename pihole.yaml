@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-http-pihole
+  labels:
+    app: pihole
+spec:
+  selector:
+    app: pihole
+  type: NodePort
+  ports:
+  - port: 80
+    name: http
+    targetPort: 80
+    nodePort: 30080
+    protocol: TCP
+  - port: 443
+    name: https
+    #targetPort: 443
+    #nodePort: 30443
+    protocol: TCP
+  - port: 53
+    name: dns-tcp
+    targetPort: 53
+    nodePort: 30053
+    protocol: TCP
+  - port: 53
+    name: dns-udp 
+    targetPort: 53
+    nodePort: 30053
+    protocol: UDP
+  - port: 67
+    name: dhcp-udp
+    targetPort: 67
+    nodePort: 30067
+    protocol: UDP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole-deploy
+  labels:
+    app: pihole
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pihole
+      tier: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 15
+  template:
+    metadata:
+      labels:
+        app: pihole
+        tier: backend
+    spec:
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+        - "127.0.0.1"
+        - "8.8.8.8"
+        - "8.8.4.4"
+      containers:
+      - image: pihole/pihole:latest
+        name: pihole
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: http
+          #hostIP: '192.168.178.10'
+          #hostPort: 80
+        - containerPort: 53
+          name: 53-tcp
+          #hostIP: '192.168.178.10'
+          #hostPort: 53
+        - containerPort: 53
+          name: 53-udp
+          #hostIP: '192.168.178.10'
+          #hostPort: 53
+        - containerPort: 67
+          name: 67-udp
+          #hostIP: '192.168.178.10'
+          #hostPort: 67
+        - containerPort: 443
+          name: 443-tcp
+          #hostIP: '192.168.178.10'
+          #hostPort: 443
+        env:
+        - name: TZ
+          value: 'Europe/Berlin'
+        - name: DNS1
+          value: '8.8.4.4'
+        - name: DNS2
+          value: '8.8.8.8'
+        - name: WEBPASSWORD
+          value: 'YOURPASSWORDHERE'
+        - name: ServerIP
+          value: '192.168.178.10'
+
