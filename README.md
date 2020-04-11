@@ -3,7 +3,8 @@ An implementation of [PiHole project](https://pi-hole.net/) running on Ranchers 
 
 # Limitations
 
-This setup is working for a single-node cluster only.
+This setup is working for a multi-node cluster only, because PiHole is using 'low ports' for DNS and DHCP (No. 53/67), you will need a loadbalancer (MetalLB or K3s' LB) to route traffic to your pods.
+Having the services run on Nodeports/Hostport did not work out for me.
 
 # Install K3s on Raspberry
 
